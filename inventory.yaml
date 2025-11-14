@@ -1,0 +1,5 @@
+[Ubuntu]
+Server1 ansible_host=192.168.56.110 ansible_user=Magboo target_user=Magboo
+[CentOS]
+Server2 ansible_host=192.168.56.105 ansible_user=matt target_user=matt
+
