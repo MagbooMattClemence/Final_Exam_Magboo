@@ -3,28 +3,39 @@
   become: true
   pre_tasks:
 
-  - name: Update and install Update(CentOS)
-    tags: always
-    yum:
-      name: "*"
-      update_cache: yes
-    changed_when: false
-    when: ansible_distribution == "CentOS"
+    - name: Disable epel-next on CentOS (prevents broken dependencies)
+      command: dnf config-manager --set-disabled epel-next
+      changed_when: false
+      when: ansible_distribution == "CentOS"
 
-  - name: Update and Install Update(Ubuntu)
-    tags: always
-    apt:
-      update_cache: yes
-    changed_when: false
-    when: ansible_distribution == "Ubuntu"
+    - name: Update packages on CentOS
+      tags: always
+      dnf:
+        name: "*"
+        state: latest
+        exclude:
+          - centos-release*
+          - centos-stream-release*
+          - system-release*
+      changed_when: false
+      when: ansible_distribution == "CentOS"
 
-  - name: motd play
-    copy:
-      content: "Ansible Managed by Magboo\n"
-      dest: /etc/motd
+    - name: Update and Install Update (Ubuntu)
+      tags: always
+      apt:
+        update_cache: yes
+      changed_when: false
+      when: ansible_distribution == "Ubuntu"
+
+    - name: motd play
+    # MESSAGE OF THE DAY
+      copy:
+        content: "Ansible Managed by Magboo\n"
+        dest: /etc/motd
 
 - hosts: all
   become: true
   roles:
     - prometheus
     - apache2
+

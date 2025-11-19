@@ -1,28 +1,35 @@
----
-  - name: install Prometheus for Ubuntu
-    tags: prome-ubuntu
-    apt:
-      name: prometheus
-      state: latest
-      update_cache: yes
-    when: ansible_distribution == "Ubuntu"
+- name: install snapd for CentOS
+  yum:
+    name: snapd
+    state: latest
+  become: true
+  when: ansible_distribution == "CentOS"
 
-  - name: install snapd for CentOS
-    tags: prome-centos
-    yum:
-      name:
-        - snapd
-      state: latest
-      update_cache: yes
-    when: ansible_distribution == "CentOS"
+- name: enable snapd socket
+  systemd:
+    name: snapd.socket
+    enabled: true
+    state: started
+  become: true
+  when: ansible_distribution == "CentOS"
 
-  - name: enable sockets
-    tags: prome-centos
-    command: systemctl enable --now snapd.socket
-    when: ansible_distribution == "CentOS"
+- name: ensure /snap symlink exists
+  file:
+    src: /var/lib/snapd/snap
+    dest: /snap
+    state: link
+  become: true
+  when: ansible_distribution == "CentOS"
 
-  - name: install prometheus with snapd
-    tags: prome-centos
-    command: snap install prometheus --clasic
-    when: ansible_distribution == "CentOS"
+- name: wait for snapd to initialize
+  pause:
+    seconds: 15
+  when: ansible_distribution == "CentOS"
+
+- name: install prometheus with snapd
+  command: snap install prometheus --classic
+  become: true
+  environment:
+    PATH: "/snap/bin:{{ ansible_env.PATH }}"
+  when: ansible_distribution == "CentOS"
 
